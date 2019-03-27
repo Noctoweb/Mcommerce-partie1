@@ -3,6 +3,7 @@ package com.ecommerce.microcommerce.web.controller;
 import com.ecommerce.microcommerce.dao.ProductDao;
 import com.ecommerce.microcommerce.model.Product;
 import com.ecommerce.microcommerce.web.exceptions.AucunProduitEnMagasinException;
+import com.ecommerce.microcommerce.web.exceptions.ProduitGratuitException;
 import com.ecommerce.microcommerce.web.exceptions.ProduitIntrouvableException;
 import com.fasterxml.jackson.databind.ser.FilterProvider;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
@@ -27,6 +28,7 @@ import java.util.Map;
 public class ProductController {
 
     private final ProductDao productDao;
+    private final int ZERO_EURO = 0;
 
     @Autowired
     public ProductController(ProductDao productDao) {
@@ -60,7 +62,7 @@ public class ProductController {
     //Récupérer un produit par son Id
     @ApiOperation(value = "Récupère un produit grâce à son ID à condition que celui-ci soit en stock!")
     @GetMapping(value = "/Produits/{id}")
-    public Product afficherUnProduit(@PathVariable int id) {
+    public Product afficherUnProduit(@PathVariable int id)  {
 
         Product produit = productDao.findById(id);
 
@@ -74,8 +76,10 @@ public class ProductController {
     //ajouter un produit
     @PostMapping(value = "/Produits")
 
-    public ResponseEntity<Void> ajouterProduit(@Valid @RequestBody Product product) {
+    public ResponseEntity<Void> ajouterProduit(@Valid @RequestBody Product product) throws ProduitGratuitException {
 
+        //Partie 3 - Validation du prix de vente
+        if(product.getPrix() == ZERO_EURO) throw new ProduitGratuitException("Produit Gratuit ! Nous devons tourner l'économie");
         Product productAdded = productDao.save(product);
 
         if (productAdded == null)
